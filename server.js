@@ -1,85 +1,103 @@
-let express = require('express');
-let bodyParser = require('body-parser');
-let logger = require('morgan');
-let mongoose = require('mongoose');
+'use strict'
 
-let Article = require('./models/Article.js');
+// Include Server Dependencies
+const express = require("express");
+const bodyParser = require("body-parser");
+const logger = require("morgan");
+const mongoose = require("mongoose");
 
-let app = express();
-let PORT = process.env.PORT || 3000;
+// Require Article Schema
+const Article = require("./models/Article");
+
+// Create Instance of Express
+const app = express();
+// Sets an initial port.
+const PORT = process.env.PORT || 8080;
 
 // Run Morgan for Logging
-app.use(logger('dev'));
+app.use(logger("dev"));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.text());
-app.use(bodyParser.json({type:'application/vnd.api+json'}));
+app.use(bodyParser.json({ type: "application/vnd.api+json" }));
 
-app.use(express.static('./public'));
+app.use(express.static("./public"));
 
-//mongoose.connect('mongodb://localhost/nytreact');
-mongoose.connect("mongodb://localhost/NYTReact", {
-  useMongoClient: true
+// Connect to the Mongo DB
+mongoose.connect(
+  process.env.MONGODB_URI || "mongodb://localhost/NYTReact",
+  {
+    useMongoClient: true
+  }
+);
+
+const db = mongoose.connection;
+
+db.on("error", function(err) {
+  console.log("Mongoose Error: ", err);
 });
 
-let db = mongoose.connection;
-
-db.on('error', function (err) {
-    console.log('Mongoose Error: ', err);
+db.once("open", function() {
+  console.log("Mongoose connection successful.");
 });
 
-db.once('open', function () {
-    console.log('Mongoose connection successful.');
+// Route to get all saved articles.
+app.get("/api/saved", function(req, res) {
+
+  // We will find all the records, sort it in descending order, then limit the records to 10
+  Article.find({}).limit(10).exec(function(err, doc) {
+    if (err) {
+      console.log(err);
+    }
+    else {
+      res.send(doc);
+    }
+  });
 });
 
-app.get('/', function(req, res){
-    res.sendFile('./public/index.html');
+// Main "/" Route. Redirects user to rendered React application.
+app.get("*", function(req, res) {
+  res.sendFile(__dirname + "/public/index.html");
 });
 
-app.get('/api/saved', function(req, res) {
+// Route to save articles from searches.
+app.post("/api/saved", function(req, res) {
+  console.log("Article title: " + req.body.title);
+  console.log("Article date: " + req.body.date);
+  console.log("Article url: ") + req.body.url;
 
-    Article.find({})
-        .exec(function(err, doc){
-
-            if(err){
-                console.log(err);
-            }
-            else {
-                res.send(doc);
-            }
-        })
+  // Save article.
+  Article.create({
+    title: req.body.title,
+    date: req.body.date,
+    url: req.body.url
+  }, function(err) {
+    if (err) {
+      console.log(err);
+    }
+    else {
+      res.send("Saved Article");
+    }
+  });
 });
 
-app.post('/api/saved', function(req, res){
+// Route to delete saved article.
+app.delete("/api/saved/:id", function(req, res) {
 
-    var newArticle = new Article({
-        title: req.body.title,
-        date: req.body.date,
-        url: req.body.url
-    });
+  console.log("Article ID to delete: " + req.params.id);
 
-    newArticle.save(function(err, doc){
-        if(err){
-            console.log(err);
-            res.send(err);
-        } else {
-            res.json(doc);
-        }
-    });
-
+  Article.findByIdAndRemove(req.params.id, function (err, response) {
+    if(err){
+      res.send("Delete didn't work: " + err);
+    }
+    res.send(response);
+  });
 });
 
-app.delete('/api/saved/:id', function(req, res){
-
-    Article.find({'_id': req.params.id}).remove()
-        .exec(function(err, doc) {
-            res.send(doc);
-        });
-
-});
-
-
+// Listener.
 
 app.listen(PORT, function() {
-    console.log("App listening on PORT: " + PORT);
+  console.log(`🌎  ==> API Server now listening on PORT ${PORT}!`);
 });
+
+

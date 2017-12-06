@@ -1,29 +1,17 @@
-/**
- * Created by ryanrodwell on 6/9/17.
- */
-// Include the Mongoose Dependencies
-let mongoose = require('mongoose');
-let Schema = mongoose.Schema;
+var mongoose = require("mongoose");
+var Schema = mongoose.Schema;
 
-
-let ArticleSchema = new Schema({
-    title: {
-        type: String,
-        required: true
-    },
-    date: {
-        type: Date,
-        default: Date.now,
-        required: true
-    },
-    url: {
-        type: String,
-        required: true
-    }
+var ArticleSchema = new Schema({
+  title: {
+    type: String, required: true
+  },
+  date: {
+    type: String
+  },
+  url: {
+    type: String
+  },
 });
 
-// Create the Model
-let Article = mongoose.model('Article', ArticleSchema);
-
-// Export it for use elsewhere
+var Article = mongoose.model("Article", ArticleSchema);
 module.exports = Article;
