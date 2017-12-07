@@ -23,15 +23,11 @@ app.use(bodyParser.json({ type: "application/vnd.api+json" }));
 
 app.use(express.static("./public"));
 
-// Connect to the Mongo DB
-mongoose.connect(
-  process.env.MONGODB_URI || "mongodb://localhost/NYTReact",
-  {
-    useMongoClient: true
-  }
-);
+// -------------------------------------------------
 
-const db = mongoose.connection;
+// MongoDB Configuration configuration (Change this URL to your own DB)
+mongoose.connect("mongodb://heroku_41njf0v6:ho7mjcv4ejq4etq0nsce6qcbka@ds135532.mlab.com:35532/heroku_41njf0v6");
+var db = mongoose.connection;
 
 db.on("error", function(err) {
   console.log("Mongoose Error: ", err);
@@ -41,10 +37,12 @@ db.once("open", function() {
   console.log("Mongoose connection successful.");
 });
 
+// -------------------------------------------------
+
 // Route to get all saved articles.
 app.get("/api/saved", function(req, res) {
 
-  // We will find all the records, sort it in descending order, then limit the records to 10
+  // We will find all the records, sort it in descending order, then limit the records to 5
   Article.find({}).limit(10).exec(function(err, doc) {
     if (err) {
       console.log(err);
@@ -95,9 +93,6 @@ app.delete("/api/saved/:id", function(req, res) {
 });
 
 // Listener.
-
-app.listen(PORT, function() {
-  console.log(`🌎  ==> API Server now listening on PORT ${PORT}!`);
+app.listen(PORT, () => {
+  console.log("App listening on PORT: " + PORT);
 });
-
-

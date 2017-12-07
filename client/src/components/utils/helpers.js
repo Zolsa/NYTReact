@@ -19,6 +19,8 @@ const helpers = {
     });
   },
 
+  // Todo: eventually add delete item that calls on delete in server.js.
+
   // Hit server to get saved articles.
   getSaved: () => {
   	return axios.get("/api/saved");
