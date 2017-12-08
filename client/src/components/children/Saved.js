@@ -1,14 +1,23 @@
 import React from "react";
+import API from "../../utils/API"
+
 class Saved extends React.Component {
-	constructor(props) {
-		super(props);
+	//Same thing... Not sure how to update state.saved with the saved articles in the db
+	state = {
+		saved: API.findSaved;
 	}
 
 	handleDeleteButton = (id) => {
-    API.deleteArticle(id).then(this.getSavedArticles());
+    API.deleteArticle(id).then(Main.getSavedArticles());
   }
-  
-	displaySaved = () => {
+
+  componentDidMount() {
+    API.findSaved()
+      .then(res => this.setState({ article: res.data }))
+      .catch(err => console.log(err));
+  }
+ 	
+ 	displayArticles = (this.state.saved) => {
 	render() {
 		return (
 			<div className="col-md-12">
@@ -20,25 +29,27 @@ class Saved extends React.Component {
     						<h3 className="panel-title">Saved Articles</h3>
   						</div>
 
-  					<div className="panel-body">
-		      	{this.state.saved.map((article, i) => {
-		        	return (
-		        		<div key={i} onClick={() => this.props.deleteArticle(article._id, i)} className="row savedRow">
-		        			<div className="col-sm-5 articleText">
-		        				<a href={article.url}>{article.title}</a>
-		        			</div>
-		        			<div className="col-sm-5 dateText">
-		        				Date Saved: {article.date}
-		        			</div>
-		        			<div className="col-sm-2 pull-right">
-		        				<button className="btn btn-primary removeButton pull-right">
-            								Remove
-          							</button>
-		        			</div>
-		        		</div>
-		        	);
-		      	})}
-		    	</div>
+	  					<div className="panel-body">
+				      	{this.state.saved.map((article, i) => {
+				        	return (
+				        		<div key={i} onClick={() => this.props.deleteArticle(article._id, i)} className="row savedRow">
+				        			
+				        			<div className="col-sm-5 articleText">
+				        				<a href={article.url}>{article.title}</a>
+				        			</div>
+
+				        			<div className="col-sm-5 dateText">
+				        				Date: {article.date}
+				        			</div>
+
+				        			<div className="col-sm-2 pull-right">
+				        				<button className="btn btn-default" onClick={() => this.handleDeleteButton(props._id)}>Delete Article</button>
+				        			</div>
+
+				        		</div>
+				        	);
+				      	})}
+			    		</div>
     				</div>
     			</div>
     		</div>
@@ -47,5 +58,4 @@ class Saved extends React.Component {
 	}
 }
 
-// Export the component back for use in other files.
 export default Saved;

@@ -1,4 +1,5 @@
 import React from "react";
+import API from "../../utils/api";
 
 class Search extends React.Component {
 
@@ -50,4 +51,4 @@ class Search extends React.Component {
   }
 }
 
-export default Search;
+export default Query;
