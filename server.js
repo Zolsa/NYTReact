@@ -1,98 +1,61 @@
-'use strict'
-
-// Include Server Dependencies
 const express = require("express");
-const bodyParser = require("body-parser");
-const logger = require("morgan");
 const mongoose = require("mongoose");
-
-// Require Article Schema
+const bodyParser = require("body-parser");
+const path = require("path");
+const router = new express.Router();
+const routes = require("./routes");
+const app = express();
 const Article = require("./models/Article");
 
-// Create Instance of Express
-const app = express();
-// Sets an initial port.
-const PORT = process.env.PORT || 8080;
 
-// Run Morgan for Logging
-app.use(logger("dev"));
-app.use(bodyParser.json());
+app.use(routes);
+
+const PORT = process.env.PORT || 3001;
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.text());
-app.use(bodyParser.json({ type: "application/vnd.api+json" }));
+app.use(bodyParser.json());
 
-app.use(express.static("./public"));
-
-// -------------------------------------------------
-
-// MongoDB Configuration configuration (Change this URL to your own DB)
-mongoose.connect("mongodb://heroku_41njf0v6:ho7mjcv4ejq4etq0nsce6qcbka@ds135532.mlab.com:35532/heroku_41njf0v6");
-var db = mongoose.connection;
-
-db.on("error", function(err) {
-  console.log("Mongoose Error: ", err);
+const db = process.env.MONGODB_URI || "mongodb://localhost/newyorktimes";
+mongoose.connect(db, function(error){
+	if(error){
+		console.log(error);
+	}
+	else {
+		console.log("Connected to database.");
+	}
 });
 
-db.once("open", function() {
-  console.log("Mongoose connection successful.");
+router.get("/api/saved", function(req, res) {
+    Article.find().then(function(doc) {
+      res.json(doc);
+    }).catch(function(err) {
+      res.json(err);
+    });
 });
 
-// -------------------------------------------------
-
-// Route to get all saved articles.
-app.get("/api/saved", function(req, res) {
-
-  // We will find all the records, sort it in descending order, then limit the records to 5
-  Article.find({}).limit(10).exec(function(err, doc) {
-    if (err) {
-      console.log(err);
-    }
-    else {
-      res.send(doc);
-    }
-  });
+router.post("/api/saved", function(req, res) {
+    Article.create(req.body).then(function(doc) {
+      res.json(doc);
+      console.log("doc: ", doc);
+    }).catch(function(err) {
+      res.json(err);
+    });
 });
 
-// Main "/" Route. Redirects user to rendered React application.
-app.get("*", function(req, res) {
-  res.sendFile(__dirname + "/public/index.html");
+router.delete("/api/saved/:id", function(req, res) {
+    Article.remove({
+      _id: req.params.id
+    }).then(function(doc) {
+      res.json(doc);
+      console.log("doc: ", doc);
+    }).catch(function(err) {
+      res.json(err);
+    });
 });
 
-// Route to save articles from searches.
-app.post("/api/saved", function(req, res) {
-  console.log("Article title: " + req.body.title);
-  console.log("Article date: " + req.body.date);
-  console.log("Article url: ") + req.body.url;
-
-  // Save article.
-  Article.create({
-    title: req.body.title,
-    date: req.body.date,
-    url: req.body.url
-  }, function(err) {
-    if (err) {
-      console.log(err);
-    }
-    else {
-      res.send("Saved Article");
-    }
-  });
+router.get("/*", function(req, res) {
+  res.sendFile(path.join(__dirname, "./client/build/index.html"));
 });
 
-// Route to delete saved article.
-app.delete("/api/saved/:id", function(req, res) {
-
-  console.log("Article ID to delete: " + req.params.id);
-
-  Article.findByIdAndRemove(req.params.id, function (err, response) {
-    if(err){
-      res.send("Delete didn't work: " + err);
-    }
-    res.send(response);
-  });
-});
-
-// Listener.
-app.listen(PORT, () => {
-  console.log("App listening on PORT: " + PORT);
+app.listen(PORT, function() {
+  console.log("Server running on port " + PORT);
 });

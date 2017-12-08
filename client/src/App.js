@@ -1,19 +1,18 @@
-// Include the Main React Dependencies
-import React from "react";
-import ReactDOM from "react-dom";
-
-// Implementing very simple routing for single-page app.
-import { BrowserRouter, Route } from "react-router-dom";
-
-// Include the main Main Component
+import React, { Component } from 'react';
+import {BrowserRouter as Router, Route} from "react-router-dom";
+import './App.css';
 import Main from "./components/Main";
 
-// Render main route.
-ReactDOM.render(
-	(
-		<BrowserRouter>
-			<Route path="/" component={Main} />
-		</BrowserRouter>
-	),
-	document.getElementById("app")
-);
+class App extends Component {
+  render() {
+    return (
+      <Router>
+        <div>
+          <Route path="/" component={Main}/>
+        </div>
+      </Router>
+    );
+  }
+}
+
+export default App;
